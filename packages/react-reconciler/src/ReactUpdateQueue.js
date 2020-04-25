@@ -181,6 +181,7 @@ export function cloneUpdateQueue<State>(
   }
 }
 
+// 生成 update 对象
 export function createUpdate(
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,

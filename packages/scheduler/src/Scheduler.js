@@ -60,8 +60,8 @@ var LOW_PRIORITY_TIMEOUT = 10000;
 var IDLE_PRIORITY = maxSigned31BitInt;
 
 // Tasks are stored on a min heap 任务存储在最小堆中
-var taskQueue = [];
-var timerQueue = [];
+var taskQueue = [];  // 存放将被处理的任务
+var timerQueue = [];  // 存放延迟处理的任务
 
 // Incrementing（递增，自增） id counter. Used to maintain（维护） insertion（插入） order.
 var taskIdCounter = 1;
@@ -78,6 +78,7 @@ var isPerformingWork = false;
 var isHostCallbackScheduled = false;
 var isHostTimeoutScheduled = false;
 
+// 任务由 timerQueue 流向 taskQueue 的过程
 function advanceTimers(currentTime) {
   // Check for tasks that are no longer delayed and add them to the queue.
   let timer = peek(timerQueue);
@@ -119,6 +120,7 @@ function handleTimeout(currentTime) {
   }
 }
 
+// 执行 taskQueue 数组中的任务
 function flushWork(hasTimeRemaining, initialTime) {
   if (enableProfiling) {
     markSchedulerUnsuspended(initialTime);
@@ -127,7 +129,7 @@ function flushWork(hasTimeRemaining, initialTime) {
   // We'll need a host callback the next time work is scheduled.
   isHostCallbackScheduled = false;
   if (isHostTimeoutScheduled) {
-    // We scheduled a timeout but it's no longer needed. Cancel it.
+    // We scheduled a timeout but it's no longer（不再） needed. Cancel it.
     isHostTimeoutScheduled = false;
     cancelHostTimeout();
   }
@@ -161,6 +163,7 @@ function flushWork(hasTimeRemaining, initialTime) {
   }
 }
 
+// 事件循环
 function workLoop(hasTimeRemaining, initialTime) {
   let currentTime = initialTime;
   advanceTimers(currentTime);
@@ -171,7 +174,7 @@ function workLoop(hasTimeRemaining, initialTime) {
   ) {
     if (
       currentTask.expirationTime > currentTime &&
-      (!hasTimeRemaining || shouldYieldToHost())
+      (!hasTimeRemaining || shouldYieldToHost())  // 达到任务的最大运行时长，让出主线程
     ) {
       // This currentTask hasn't expired（过期）, and we've reached（达到） the deadline（截止日期）.
       break;
@@ -202,7 +205,7 @@ function workLoop(hasTimeRemaining, initialTime) {
     }
     currentTask = peek(taskQueue);
   }
-  // Return whether there's additional work
+  // Return whether there's additional（额外的） work 
   if (currentTask !== null) {
     return true;
   } else {
@@ -293,7 +296,7 @@ function timeoutForPriorityLevel(priorityLevel) {
   }
 }
 
-// 组成双向链表，开始安排任务
+// 开始安排任务
 function unstable_scheduleCallback(priorityLevel, callback, options) {
   var currentTime = getCurrentTime();
 
@@ -327,11 +330,13 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     expirationTime,
     sortIndex: -1,
   };
-  if (enableProfiling) {
-    newTask.isQueued = false;
+  if (enableProfiling) {   // 判断当前是否开始程序剖析
+    newTask.isQueued = false;  // 若开始当前任务还未进行排队   queue（排队）
   }
 
-  if (startTime > currentTime) {
+  // 判断开始时间是否大于当前时间 ，若大于当前时间，则该任务需要延迟进行，放入到 timerQueue 中
+  // 若小于或等于当前时间，则该任务需放入 taskQueue 中，需立即执行
+  if (startTime > currentTime) { 
     // This is a delayed task.
     newTask.sortIndex = startTime;
     push(timerQueue, newTask);
@@ -350,6 +355,7 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     newTask.sortIndex = expirationTime;
     push(taskQueue, newTask);
     if (enableProfiling) {
+
       markTaskStart(newTask, currentTime);
       newTask.isQueued = true;
     }
@@ -364,8 +370,9 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
   return newTask;
 }
 
+// 暂停 workloop 循环，执行高优先级任务或仅让出主线程
 function unstable_pauseExecution() {
-  isSchedulerPaused = true;
+  isSchedulerPaused = true;  // 计划程序是否暂停
 }
 
 function unstable_continueExecution() {
@@ -399,6 +406,7 @@ function unstable_getCurrentPriorityLevel() {
   return currentPriorityLevel;
 }
 
+// 用于判断是否用暂停当前任务的执行，其一在于新添加任务的优先级高于当前任务，其二在于当前任务已达到 deadline。
 function unstable_shouldYield() {
   const currentTime = getCurrentTime();
   advanceTimers(currentTime);

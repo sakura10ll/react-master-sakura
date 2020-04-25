@@ -17,14 +17,14 @@ export let getCurrentTime;
 export let forceFrameRate;
 
 if (
-  // If Scheduler runs in a non-DOM environment, it falls back to a naive
-  // implementation using setTimeout.
+  // If Scheduler runs in a non-DOM environment（环境）, it falls back to a naive
+  // implementation（实施，实现，执行） using setTimeout. 如果调度程序在非DOM环境中运行，它将使用setTimeout返回到原始实现。
   typeof window === 'undefined' ||
-  // Check if MessageChannel is supported, too.
+  // Check if MessageChannel is supported, too. MessageChannel 是web api中的参数，可在web worker中使用，判断其是否支持该参数。
   typeof MessageChannel !== 'function'
 ) {
   // If this accidentally gets imported in a non-browser environment, e.g. JavaScriptCore,
-  // fallback to a naive implementation.
+  // fallback to a naive implementation.实现如果意外地在非浏览器环境（如JavaScriptCore）中导入，则返回到原始实现。
   let _callback = null;
   let _timeoutID = null;
   const _flushCallback = function() {
@@ -67,7 +67,7 @@ if (
   };
   requestPaint = forceFrameRate = function() {};
 } else {
-  // Capture local references to native APIs, in case a polyfill overrides them.
+  // Capture local references to native APIs, in case a polyfill overrides them.捕获对本机api的本地引用，以防polyfill重写它们。
   const performance = window.performance;
   const Date = window.Date;
   const setTimeout = window.setTimeout;
@@ -112,7 +112,7 @@ if (
   let scheduledHostCallback = null;
   let taskTimeoutID = -1;
 
-  // Scheduler periodically yields in case there is other work on the main
+  // Scheduler periodically（定期，周期性） yields in case there is other work on the main
   // thread, like user events. By default, it yields multiple times per frame.
   // It does not attempt to align with frame boundaries, since most tasks don't
   // need to be frame aligned; for those that do, use requestAnimationFrame.
@@ -134,10 +134,10 @@ if (
     shouldYieldToHost = function() {
       const currentTime = getCurrentTime();
       if (currentTime >= deadline) {
-        // There's no time left. We may want to yield control of the main
-        // thread, so the browser can perform high priority tasks. The main ones
-        // are painting and user input. If there's a pending paint or a pending
-        // input, then we should yield. But if there's neither, then we can
+        // There's no time left. We may want to yield（放弃） control of the main
+        // thread（主线程）, so the browser can perform（执行） high priority tasks. The main ones
+        // are painting（绘画） and user input（用户输入）. If there's a pending（挂起的） paint or a pending
+        // input, then we should yield（暂停）. But if there's neither, then we can
         // yield less often while remaining responsive. We'll eventually yield
         // regardless, since there could be a pending paint that wasn't
         // accompanied by a call to `requestPaint`, or other main thread tasks
@@ -169,6 +169,7 @@ if (
     requestPaint = function() {};
   }
 
+  // 强制帧速率  设置任务最大工作时长
   forceFrameRate = function(fps) {
     if (fps < 0 || fps > 125) {
       // Using console['error'] to evade Babel and ESLint

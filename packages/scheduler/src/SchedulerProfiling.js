@@ -102,6 +102,7 @@ export function stopLoggingProfilingEvents(): ArrayBuffer | null {
   return buffer;
 }
 
+// 标记任务开始
 export function markTaskStart(
   task: {
     id: number,

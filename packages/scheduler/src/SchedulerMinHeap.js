@@ -38,6 +38,7 @@ export function pop(heap: Heap): Node | null {
   }
 }
 
+// 对heap中的任务进行排序
 function siftUp(heap, node, i) {
   let index = i;
   while (true) {
@@ -87,7 +88,8 @@ function siftDown(heap, node, i) {
 }
 
 function compare(a, b) {
-  // Compare sort index first, then task id.
+  // Compare sort index first, then task id.  
+  // 先判断sortIndex的大小，若不相等，再去判断两个任务的id大小，sortIndex越小，优先级越高，id跟先后顺序有关
   const diff = a.sortIndex - b.sortIndex;
   return diff !== 0 ? diff : a.id - b.id;
 }

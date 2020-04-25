@@ -266,7 +266,7 @@ let rootsWithPendingDiscreteUpdates: Map<
   ExpirationTime,
 > | null = null;
 
-// Use these to prevent an infinite loop of nested updates
+// Use these to prevent（防止） an infinite（无限的） loop of nested（嵌套的） updates
 const NESTED_UPDATE_LIMIT = 50;
 let nestedUpdateCount: number = 0;
 let rootWithNestedUpdates: FiberRoot | null = null;
@@ -377,39 +377,48 @@ export function computeExpirationForFiber(
   return expirationTime;
 }
 
+// 开始进行任务调度
 export function scheduleUpdateOnFiber(
   fiber: Fiber,
   expirationTime: ExpirationTime,
 ) {
-  checkForNestedUpdates();
-  warnAboutRenderPhaseUpdatesInDEV(fiber);
+  checkForNestedUpdates(); // 检查嵌套更新，检查最大的update数量是否超过最大值
+  warnAboutRenderPhaseUpdatesInDEV(fiber); // 在DEV中警告渲染阶段更新
 
+  // 更新当前fiber对象和当前rootfiber根元素，root根元素的到期时间
   const root = markUpdateTimeFromFiberToRoot(fiber, expirationTime);
   if (root === null) {
+    // 若找不到 root 报警告
     warnAboutUpdateOnUnmountedFiberInDEV(fiber);
     return;
   }
 
+  // 查看当前是否被可以被打断
   checkForInterruption(fiber, expirationTime);
+  // 用来记录debug信息
   recordScheduleUpdate();
 
   // TODO: computeExpirationForFiber also reads the priority. Pass the
   // priority as an argument to that function and this one.
   const priorityLevel = getCurrentPriorityLevel();
 
+  // 判断当前是同步更新
   if (expirationTime === Sync) {
     if (
-      // Check if we're inside unbatchedUpdates
+      // Check if we're inside unbatchedUpdates  如果正在执行的上下文是unbatchUpdate不是批量更新
       (executionContext & LegacyUnbatchedContext) !== NoContext &&
-      // Check if we're not already rendering
+      // Check if we're not already rendering   检查不是render或者commit阶段
       (executionContext & (RenderContext | CommitContext)) === NoContext
     ) {
-      // Register pending interactions on the root to avoid losing traced interaction data.
+      // Register pending interactions on the root to avoid losing traced interaction data. 
+      // 在根目录上注册挂起的交互以避免丢失跟踪的交互数据。 安排挂起的交互
       schedulePendingInteractions(root, expirationTime);
 
       // This is a legacy edge case. The initial mount of a ReactDOM.render-ed
       // root inside of batchedUpdates should be synchronous, but layout updates
       // should be deferred until the end of the batch.
+      // 这是一个遗留的边缘案例。batchedUpdates中ReactDOM.render-ed根的初始装载应该是同步的，
+      // 但是布局更新应该推迟到批处理结束。  执行同步操作
       performSyncWorkOnRoot(root);
     } else {
       ensureRootIsScheduled(root);
@@ -420,7 +429,12 @@ export function scheduleUpdateOnFiber(
         // scheduleCallbackForFiber to preserve the ability to schedule a callback
         // without immediately flushing it. We only do this for user-initiated
         // updates, to preserve historical behavior of legacy mode.
-        flushSyncCallbackQueue();
+        // 现在刷新同步工作，除非我们已经在工作或在批处理中。
+        // 这是在scheduleUpdateOnFiber而不是scheduleCallbackForFiber内部故意设置的，
+        // 以保留在不立即刷新回调的情况下调度回调的功能。我们只对用户发起的更新执行此操作，
+        // 以保留传统模式的历史行为。
+        // 执行同步更新队列
+        flushSyncCallbackQueue(); 
       }
     }
   } else {
@@ -453,6 +467,8 @@ export const scheduleWork = scheduleUpdateOnFiber;
 // work without treating it as a typical update that originates from an event;
 // e.g. retrying a Suspense boundary isn't an update, but it does schedule work
 // on a fiber.
+// 这被分成一个单独的函数，这样我们就可以用挂起的工作标记一个fiber，而不必将其视为源于事件的典型更新；
+// 例如，重试挂起的边界不是更新，但它确实会安排fiber上的工作
 function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
   // Update the source fiber's expiration time
   if (fiber.expirationTime < expirationTime) {
@@ -2602,6 +2618,7 @@ function computeMsUntilSuspenseLoadingDelay(
   return msUntilTimeout;
 }
 
+// 检查嵌套更新
 function checkForNestedUpdates() {
   if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
     nestedUpdateCount = 0;
@@ -2785,6 +2802,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
 }
 
 let didWarnAboutUpdateInRender = false;
+// 在DEV中警告渲染阶段更新
 function warnAboutRenderPhaseUpdatesInDEV(fiber) {
   if (__DEV__) {
     if ((executionContext & RenderContext) !== NoContext) {

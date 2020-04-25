@@ -118,6 +118,7 @@ function createRootImpl(
     (options != null && options.hydrationOptions) || null;
     // 创建 fiberRoot
   const root = createContainer(container, tag, hydrate, hydrationCallbacks);
+  // 将当前容器标记为根节点
   markContainerAsRoot(root.current, container);
   if (hydrate && tag !== LegacyRoot) {
     const doc =
