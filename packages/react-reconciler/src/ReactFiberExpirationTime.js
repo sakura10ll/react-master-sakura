@@ -41,9 +41,9 @@ export const Batched = Sync - 1;
 const UNIT_SIZE = 10;
 const MAGIC_NUMBER_OFFSET = Batched - 1;
 
-// 1 unit of expiration time represents 10ms.
+// 1 unit of expiration time represents（代表，相当与） 10ms.
 export function msToExpirationTime(ms: number): ExpirationTime {
-  // Always subtract from the offset so that we don't clash with the magic number for NoWork.
+  // Always subtract（减去） from the offset（偏移量） so that we don't clash（打斗，冲突，争论） with the magic number for NoWork.    总是从偏移量减去，就不会和 NoWork 的数值冲突
   return MAGIC_NUMBER_OFFSET - ((ms / UNIT_SIZE) | 0);
 }
 

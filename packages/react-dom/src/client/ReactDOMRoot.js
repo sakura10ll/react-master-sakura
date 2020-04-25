@@ -116,6 +116,7 @@ function createRootImpl(
   const hydrate = options != null && options.hydrate === true;
   const hydrationCallbacks =
     (options != null && options.hydrationOptions) || null;
+    // 创建 fiberRoot
   const root = createContainer(container, tag, hydrate, hydrationCallbacks);
   markContainerAsRoot(root.current, container);
   if (hydrate && tag !== LegacyRoot) {
@@ -153,7 +154,7 @@ export function createBlockingRoot(
   return new ReactDOMBlockingRoot(container, BlockingRoot, options);
 }
 
-// 创建最后的根
+// 创建传统root
 export function createLegacyRoot(
   container: Container,
   options?: RootOptions,

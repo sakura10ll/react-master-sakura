@@ -202,6 +202,7 @@ export function createUpdate(
   return update;
 }
 
+// 队列更新
 export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
   const updateQueue = fiber.updateQueue;
   if (updateQueue === null) {

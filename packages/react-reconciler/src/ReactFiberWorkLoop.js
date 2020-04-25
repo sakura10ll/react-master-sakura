@@ -217,7 +217,7 @@ export type Thenable = {
   ...
 };
 
-// Describes where we are in the React execution stack
+// Describes where we are in the React execution stack    描述我们在react执行堆栈中的位置
 let executionContext: ExecutionContext = NoContext;
 // The root we're working on
 let workInProgressRoot: FiberRoot | null = null;
@@ -282,27 +282,28 @@ let interruptedBy: Fiber | null = null;
 // hydration or SuspenseList.
 let spawnedWorkDuringRender: null | Array<ExpirationTime> = null;
 
-// Expiration times are computed by adding to the current time (the start
-// time). However, if two updates are scheduled within the same event, we
-// should treat their start times as simultaneous, even if the actual clock
-// time has advanced between the first and second call.
+// Expiration（过期） times are computed by adding to the current time (the start
+// time). However, if two updates are scheduled（安排，预定） within the same event, we
+// should treat（把...看作，以...方式对待） their start times as simultaneous（同时发生的，同步的）, even if（即使，纵然） the actual（真实的，实际的） clock
+// time has advanced（先进的，高级的） between the first and second call.
 
-// In other words, because expiration times determine how updates are batched,
-// we want all updates of like priority that occur within the same event to
-// receive the same expiration time. Otherwise we get tearing.
+// In other words（换言之）, because expiration times determine（查明，决定，影响） how updates are batched（成批的）,   过期时间决定更新的批处理方式
+// we want all updates of like priority（优先事项，优先权） that occur within the same event to
+// receive the same expiration time. Otherwise（否则） we get tearing.  我们希望发生在同一事件中的优先级相同的所有更新都获取到相同的过期时间
 let currentEventTime: ExpirationTime = NoWork;
 
+// 获取当前更新时间
 export function requestCurrentTimeForUpdate() {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    // We're inside React, so it's fine to read the actual time.
+    // We're inside React, so it's fine to read the actual（真实的） time.  我们正处于react堆栈中，所以可以获取得到真实的时间
     return msToExpirationTime(now());
   }
-  // We're not inside React, so we may be in the middle of a browser event.
+  // We're not inside React, so we may be in the middle of a browser event.   我们不处于react堆栈中，所以我们可能处于浏览器事件中
   if (currentEventTime !== NoWork) {
-    // Use the same start time for all updates until we enter React again.
+    // Use the same start time for all updates until we enter React again.  对所有更新使用相同的开始时间，直到我们再次进入React堆栈中。
     return currentEventTime;
   }
-  // This is the first update since React yielded. Compute a new start time.
+  // This is the first update since React yielded（产生）. Compute a new start time.  这是react产生以来第一次更新，计算一个新的开始时间
   currentEventTime = msToExpirationTime(now());
   return currentEventTime;
 }
@@ -311,6 +312,7 @@ export function getCurrentTime() {
   return msToExpirationTime(now());
 }
 
+// 计算过期时间
 export function computeExpirationForFiber(
   currentTime: ExpirationTime,
   fiber: Fiber,

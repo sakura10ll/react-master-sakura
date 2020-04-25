@@ -59,11 +59,11 @@ var LOW_PRIORITY_TIMEOUT = 10000;
 // Never times out
 var IDLE_PRIORITY = maxSigned31BitInt;
 
-// Tasks are stored on a min heap
+// Tasks are stored on a min heap 任务存储在最小堆中
 var taskQueue = [];
 var timerQueue = [];
 
-// Incrementing id counter. Used to maintain insertion order.
+// Incrementing（递增，自增） id counter. Used to maintain（维护） insertion（插入） order.
 var taskIdCounter = 1;
 
 // Pausing the scheduler is useful for debugging.
@@ -173,7 +173,7 @@ function workLoop(hasTimeRemaining, initialTime) {
       currentTask.expirationTime > currentTime &&
       (!hasTimeRemaining || shouldYieldToHost())
     ) {
-      // This currentTask hasn't expired, and we've reached the deadline.
+      // This currentTask hasn't expired（过期）, and we've reached（达到） the deadline（截止日期）.
       break;
     }
     const callback = currentTask.callback;
@@ -276,6 +276,7 @@ function unstable_wrapCallback(callback) {
   };
 }
 
+// 优先级超时时间
 function timeoutForPriorityLevel(priorityLevel) {
   switch (priorityLevel) {
     case ImmediatePriority:
@@ -292,6 +293,7 @@ function timeoutForPriorityLevel(priorityLevel) {
   }
 }
 
+// 组成双向链表，开始安排任务
 function unstable_scheduleCallback(priorityLevel, callback, options) {
   var currentTime = getCurrentTime();
 
@@ -313,8 +315,10 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     startTime = currentTime;
   }
 
+  // 过期时间 = 开始时间 + 优先级超时时间
   var expirationTime = startTime + timeout;
 
+  // 根据过期时间和优先级创建任务节点
   var newTask = {
     id: taskIdCounter++,
     callback,
@@ -332,7 +336,7 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     newTask.sortIndex = startTime;
     push(timerQueue, newTask);
     if (peek(taskQueue) === null && newTask === peek(timerQueue)) {
-      // All tasks are delayed, and this is the task with the earliest delay.
+      // All tasks are delayed, and this is the task with the earliest（最早的） delay.  当前的taskQueue是空，当前的newTask是timerQueue内的第一个
       if (isHostTimeoutScheduled) {
         // Cancel an existing timeout.
         cancelHostTimeout();

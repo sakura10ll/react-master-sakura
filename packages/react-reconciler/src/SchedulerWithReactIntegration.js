@@ -1,14 +1,14 @@
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
- *
+ * 整合（integration 组合，整合）react的调度程序（scheduler 调度程序，日常安排程序）
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
  */
 
-// Intentionally not named imports because Rollup would use dynamic dispatch for
-// CommonJS interop named imports.
+// Intentionally（故意地，有意的） not named imports because Rollup（汇总） would use dynamic（动态的） dispatch（派遣，发出，发送） for
+// CommonJS interop（交互操作） named（命名） imports.
 import * as Scheduler from 'scheduler';
 import {__interactionsRef} from 'scheduler/tracing';
 import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
@@ -71,13 +71,13 @@ let immediateQueueCallbackNode: mixed | null = null;
 let isFlushingSyncQueue: boolean = false;
 let initialTimeMs: number = Scheduler_now();
 
-// If the initial timestamp is reasonably small, use Scheduler's `now` directly.
-// This will be the case for modern browsers that support `performance.now`. In
+// If the initial（初始的，最开始的） timestamp is reasonably small, use Scheduler's `now` directly（直接的，正好，立刻）.
+// This will be the case for modern（现在的，当代的） browsers that support `performance.now`. In
 // older browsers, Scheduler falls back to `Date.now`, which returns a Unix
-// timestamp. In that case, subtract the module initialization time to simulate
+// timestamp. In that case, subtract the module initialization（初始化） time to simulate（假装，冒充，模拟）
 // the behavior of performance.now and keep our times small enough to fit
 // within 32 bits.
-// TODO: Consider lifting this into Scheduler.
+// TODO: Consider（考虑） lifting（提升） this into Scheduler.
 export const now =
   initialTimeMs < 10000 ? Scheduler_now : () => Scheduler_now() - initialTimeMs;
 
