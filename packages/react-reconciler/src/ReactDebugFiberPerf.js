@@ -353,6 +353,7 @@ export function stopPhaseTimer(): void {
   }
 }
 
+// 启动工作循环计时器
 export function startWorkLoopTimer(nextUnitOfWork: Fiber | null): void {
   if (enableUserTimingAPI) {
     currentFiber = nextUnitOfWork;

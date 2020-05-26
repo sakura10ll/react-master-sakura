@@ -64,7 +64,7 @@ function ReactDOMBlockingRoot(
 ReactDOMRoot.prototype.render = ReactDOMBlockingRoot.prototype.render = function(
   children: ReactNodeList,
 ): void {
-  const root = this._internalRoot;
+  const root = this._internalRoot;   // fiberRoot
   if (__DEV__) {
     if (typeof arguments[1] === 'function') {
       console.error(
@@ -119,6 +119,7 @@ function createRootImpl(
     // 创建 fiberRoot
   const root = createContainer(container, tag, hydrate, hydrationCallbacks);
   // 将当前容器标记为根节点
+  // 给container附加一个内部属性用于指向fiberRoot的current属性对应的rootFiber节点
   markContainerAsRoot(root.current, container);
   if (hydrate && tag !== LegacyRoot) {
     const doc =

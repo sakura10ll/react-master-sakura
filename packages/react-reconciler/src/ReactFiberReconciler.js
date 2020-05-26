@@ -236,7 +236,7 @@ export function updateContainer(
   if (__DEV__) {
     onScheduleRoot(container, element);
   }
-  const current = container.current; // fiberRootNode
+  const current = container.current; // RootFiber;
   const currentTime = requestCurrentTimeForUpdate();  // 获取当前的时间节点
   if (__DEV__) {
     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
@@ -300,7 +300,7 @@ export function updateContainer(
   }
   // 队列更新， 将 update 对象放入fiber 任务队列中
   enqueueUpdate(current, update);
-  // 开始执行任务调度，在过期时间内
+  // 开始执行任务调度，在过期时间内 reactFiberWorkLoop.js 内， scheduleUpdateOnFiber
   scheduleWork(current, expirationTime);
 
   return expirationTime;

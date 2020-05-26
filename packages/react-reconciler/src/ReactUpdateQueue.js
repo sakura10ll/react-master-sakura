@@ -9,12 +9,15 @@
 
 // UpdateQueue is a linked list of prioritized updates.
 //
-// Like fibers, update queues come in pairs: a current queue, which represents
+// （队列是成对出现的，一个是当前表示可见状态的队列，一个是可以进行修改和异步处理的work-in-progress队列）
+// Like fibers, update queues come in pairs（成对，一对，一双）: a current queue, which represents（代表，表示）
 // the visible state of the screen, and a work-in-progress queue, which can be
 // mutated and processed asynchronously before it is committed — a form of
 // double buffering. If a work-in-progress render is discarded before finishing,
 // we create a new work-in-progress by cloning the current queue.
 //
+// 这两个队列都共享一个持久的、单独链接的列表结构。要安排更新，我们将其附加到两个队列的末尾。每个队列维护一个指向持久列表中尚未处理的第一次更新的指针。
+// 进行中指针的位置总是等于或大于当前队列，因为我们总是处理该队列。当前队列的指针只在提交阶段更新，当我们交换正在进行的工作时？
 // Both queues share a persistent, singly-linked list structure. To schedule an
 // update, we append it to the end of both queues. Each queue maintains a
 // pointer to first update in the persistent list that hasn't been processed.
@@ -31,6 +34,11 @@
 //                                          The work-in-progress queue has
 //                                          processed more updates than current.
 //
+
+// 我们附加到这两个队列的原因是，否则我们可能会删除更新而不处理它们。
+// 例如，如果我们只将更新添加到“正在进行的工作”队列中，则每当通过从“当前”克隆重新启动“正在进行的工作”呈现时，某些更新可能会丢失。
+// 类似地，如果我们只将更新添加到当前队列，那么只要已经在进行中的队列提交并与当前队列交换，更新就会丢失。
+// 但是，通过添加到这两个队列，我们保证更新将成为下一个正在进行的工作的一部分。（而且由于work-in-progress队列一旦提交就成为当前队列，因此不存在应用相同队列的危险
 // The reason we append to both queues is because otherwise we might drop
 // updates without ever processing them. For example, if we only add updates to
 // the work-in-progress queue, some updates could be lost whenever a work-in
@@ -42,14 +50,18 @@
 // current queue once it commits, there's no danger of applying the same
 // update twice.)
 //
-// Prioritization
+// Prioritization  优先顺序
 // --------------
-//
+// 更新不按优先级排序，而是按插入排序；新的更新总是附加到列表的末尾。
 // Updates are not sorted by priority, but by insertion; new updates are always
 // appended to the end of the list.
 //
+// 在呈现阶段处理更新队列时，结果中只包含具有足够优先级的更新。
+// 如果由于更新的优先级不足而跳过更新，则它将保留在队列中，以便稍后在较低优先级呈现期间进行处理。
+// 至关重要的是，跳过更新之后的所有更新也会保留在队列*中，而不管它们的优先级如何*。
+// 这意味着高优先级的更新有时会按两个不同的优先级处理两次。我们还跟踪基本状态，它表示应用队列中第一次更新之前的状态。
 // The priority is still important, though. When processing the update queue
-// during the render phase, only the updates with sufficient priority are
+// during the render phase（阶段，时期）, only the updates with sufficient priority are
 // included in the result. If we skip an update because it has insufficient
 // priority, it remains in the queue to be processed later, during a lower
 // priority render. Crucially, all updates subsequent to a skipped update also
@@ -64,9 +76,9 @@
 //
 //     A1 - B2 - C1 - D2
 //
-//   where the number indicates the priority, and the update is applied to the
-//   previous state by appending a letter, React will process these updates as
-//   two separate renders, one per distinct priority level:
+// where the number indicates（表示） the priority, and the update is applied to the
+// previous state by appending a letter, React will process these updates as
+// two separate（单独的，分开的） renders, one per distinct priority level:
 //
 //   First render, at priority 1:
 //     Base state: ''
@@ -79,6 +91,8 @@
 //     Updates: [B2, C1, D2]      <-  C1 was rebased on top of B2
 //     Result state: 'ABCD'
 //
+// 因为我们按照插入顺序处理更新，并且在跳过前面的更新时重新设置高优先级更新，
+// 所以不管优先级如何，最终结果都是确定的。中间状态可能因系统资源而异，但最终状态始终相同。
 // Because we process updates in insertion order, and rebase high priority
 // updates when preceding updates are skipped, the final result is deterministic
 // regardless of priority. Intermediate state may vary according to system
@@ -108,13 +122,19 @@ import invariant from 'shared/invariant';
 import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
 
 export type Update<State> = {|
+  // 更新的过期时间
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
 
+  // 重点提下CaptureUpdate，在React16后有一个ErrorBoundaries功能
+  // 即在渲染过程中报错了，可以选择新的渲染状态（提示有错误的状态），来更新页面
+  // 0更新 1替换 2强制更新 3捕获性的更新
   tag: 0 | 1 | 2 | 3,
+  // 更新内容，比如setState接收的第一个参数
   payload: any,
+  // 对应的回调，比如setState({}, callback )
   callback: (() => mixed) | null,
-
+  // 指向下一个更新
   next: Update<State>,
 
   // DEV only
@@ -122,10 +142,13 @@ export type Update<State> = {|
 |};
 
 type SharedQueue<State> = {|pending: Update<State> | null|};
-
+// 表示当前可见状态的队列
 export type UpdateQueue<State> = {|
+  // 应用更新后的state
   baseState: State,
+  // 应用更新后的队列
   baseQueue: Update<State> | null,
+  // 可以进行修改和异步处理的work-in-progress队列
   shared: SharedQueue<State>,
   effects: Array<Update<State>> | null,
 |};
@@ -151,6 +174,7 @@ if (__DEV__) {
   };
 }
 
+// 初始化队列 在创建fiber后调用，并赋值fiber.updateQueue
 export function initializeUpdateQueue<State>(fiber: Fiber): void {
   const queue: UpdateQueue<State> = {
     baseState: fiber.memoizedState,
@@ -194,7 +218,7 @@ export function createUpdate(
     payload: null,
     callback: null,
 
-    next: (null: any),
+    next: (null: any),  // 指向下一个更新
   };
   update.next = update;
   if (__DEV__) {
@@ -205,14 +229,14 @@ export function createUpdate(
 
 // 队列更新
 export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
-  const updateQueue = fiber.updateQueue;
+  const updateQueue = fiber.updateQueue;  // 当前队列
   if (updateQueue === null) {
     // Only occurs if the fiber has been unmounted.
     return;
   }
 
-  const sharedQueue = updateQueue.shared;
-  const pending = sharedQueue.pending;
+  const sharedQueue = updateQueue.shared;  // 当前队列中可修改的队列
+  const pending = sharedQueue.pending;   // 等待更新队列
   if (pending === null) {
     // This is the first update. Create a circular list.
     update.next = update;

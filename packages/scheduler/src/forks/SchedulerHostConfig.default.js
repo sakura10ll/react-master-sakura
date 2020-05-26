@@ -187,12 +187,14 @@ if (
     }
   };
 
+  // 执行工作直到超时
   const performWorkUntilDeadline = () => {
+    // 可能有被取消的情况
     if (scheduledHostCallback !== null) {
       const currentTime = getCurrentTime();
       // Yield after `yieldInterval` ms, regardless of where we are in the vsync
       // cycle. This means there's always time remaining at the beginning of
-      // the message event.
+      // the message event. 设置超时时间
       deadline = currentTime + yieldInterval;
       const hasTimeRemaining = true;
       try {

@@ -205,7 +205,7 @@ function workLoop(hasTimeRemaining, initialTime) {
     }
     currentTask = peek(taskQueue);
   }
-  // Return whether there's additional（额外的） work 
+  // Return whether there's additional（额外的） work
   if (currentTask !== null) {
     return true;
   } else {
@@ -296,8 +296,9 @@ function timeoutForPriorityLevel(priorityLevel) {
   }
 }
 
-// 开始安排任务
+// 开始安排任务，将一个任务推入任务调度队列
 function unstable_scheduleCallback(priorityLevel, callback, options) {
+  // 获取当前的时间的相对值即当前时间减去页面加载记录的时间
   var currentTime = getCurrentTime();
 
   var startTime;
@@ -336,7 +337,7 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
 
   // 判断开始时间是否大于当前时间 ，若大于当前时间，则该任务需要延迟进行，放入到 timerQueue 中
   // 若小于或等于当前时间，则该任务需放入 taskQueue 中，需立即执行
-  if (startTime > currentTime) { 
+  if (startTime > currentTime) {
     // This is a delayed task.
     newTask.sortIndex = startTime;
     push(timerQueue, newTask);

@@ -20,7 +20,7 @@ import {
 
 export type ExpirationTime = number;
 
-export const NoWork = 0;
+export const NoWork = 0;  // 代表没有更新
 // TODO: Think of a better name for Never. The key difference with Idle is that
 // Never work can be committed in an inconsistent state without tearing the UI.
 // The main example is offscreen content, like a hidden subtree. So one possible
@@ -35,11 +35,12 @@ export const Idle = 2;
 // Continuous Hydration is slightly higher than Idle and is used to increase
 // priority of hover targets.
 export const ContinuousHydration = 3;
+// 整型最大数值，是V8中针对32位系统所设置的最大值  1073741823
 export const Sync = MAX_SIGNED_31_BIT_INT;
-export const Batched = Sync - 1;
+export const Batched = Sync - 1;  // 1073741822
 
 const UNIT_SIZE = 10;
-const MAGIC_NUMBER_OFFSET = Batched - 1;
+const MAGIC_NUMBER_OFFSET = Batched - 1;  // 1073741821
 
 // 1 unit of expiration time represents（代表，相当与） 10ms.
 export function msToExpirationTime(ms: number): ExpirationTime {
@@ -55,6 +56,9 @@ function ceiling(num: number, precision: number): number {
   return (((num / precision) | 0) + 1) * precision;
 }
 
+// 计算过期时间，低优先级的过期时间是25ms，高优先级的过期时间是10ms。
+// React低优先级update的expirationTime间隔是25ms，
+// React让两个相近（25ms内）的update得到相同的expirationTime，目的就是让这两个update自动合并成一个Update，从而达到批量更新的目的，就像LOW_PRIORITY_BATCH_SIZE的名字一样，自动合并批量更新。
 function computeExpirationBucket(
   currentTime,
   expirationInMs,
@@ -71,9 +75,10 @@ function computeExpirationBucket(
 
 // TODO: This corresponds to Scheduler's NormalPriority, not LowPriority. Update
 // the names to reflect.
+// 低权限的过期时间
 export const LOW_PRIORITY_EXPIRATION = 5000;
 export const LOW_PRIORITY_BATCH_SIZE = 250;
-
+// 普通的异步的expirationTime
 export function computeAsyncExpiration(
   currentTime: ExpirationTime,
 ): ExpirationTime {

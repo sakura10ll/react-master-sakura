@@ -345,11 +345,12 @@ export function jsxDEV(type, config, maybeKey, source, self) {
 /**
  * Create and return a new ReactElement of the given type.
  * See https://reactjs.org/docs/react-api.html#createelement
+ * 通过 createElement 创建虚拟元素，返回 ReactElement 实例对象； 创建虚拟元素的实例，这里的参数可以是多个
  */
 export function createElement(type, config, children) {
   let propName;
 
-  // Reserved names are extracted
+  // Reserved names are extracted  初始化参数
   const props = {};
 
   let key = null;
@@ -357,6 +358,7 @@ export function createElement(type, config, children) {
   let self = null;
   let source = null;
 
+  // 若存在config，则提取里面的内容
   if (config != null) {
     if (hasValidRef(config)) {
       ref = config.ref;
@@ -371,7 +373,7 @@ export function createElement(type, config, children) {
 
     self = config.__self === undefined ? null : config.__self;
     source = config.__source === undefined ? null : config.__source;
-    // Remaining properties are added to a new props object
+    // Remaining properties are added to a new props object 复制config里的内容到props（如id，className等）
     for (propName in config) {
       if (
         hasOwnProperty.call(config, propName) &&
@@ -384,10 +386,12 @@ export function createElement(type, config, children) {
 
   // Children can be more than one argument, and those are transferred onto
   // the newly allocated props object.
+  // 处理children，全部挂在到props下的children属性上，若只有一个则直接赋值，若有多个则做合并处理，可以传入多个不确定参数，所以用arguments.length去判断children的个数
   const childrenLength = arguments.length - 2;
   if (childrenLength === 1) {
     props.children = children;
   } else if (childrenLength > 1) {
+    // 多节点创建一个数组
     const childArray = Array(childrenLength);
     for (let i = 0; i < childrenLength; i++) {
       childArray[i] = arguments[i + 2];
@@ -400,7 +404,7 @@ export function createElement(type, config, children) {
     props.children = childArray;
   }
 
-  // Resolve default props
+  // Resolve default props   若props为空，并且存在默认的props，则将默认的props赋给当前的props，针对于类组件或函数定义组件的情况，可以单独设置静态属性defaultProps
   if (type && type.defaultProps) {
     const defaultProps = type.defaultProps;
     for (propName in defaultProps) {
@@ -423,6 +427,7 @@ export function createElement(type, config, children) {
       }
     }
   }
+  // 返回一个 ReactElement 实例对象
   return ReactElement(
     type,
     key,

@@ -124,7 +124,7 @@ export type Dependencies = {
 };
 
 // A Fiber is work on a Component that needs to be done or was done. There can
-// be more than one per component.
+// be more than one per component.  Fiber对应一个组件需要被处理或者已经处理了，一个组件可以有一个或者多个Fiber
 export type Fiber = {|
   // These first fields are conceptually members of an Instance. This used to
   // be split into a separate type and intersected with the other Fiber fields,
@@ -265,26 +265,39 @@ function FiberNode(
   mode: TypeOfMode,
 ) {
   // Instance
+  // 用于标记fiber节点的类型
   this.tag = tag;
   this.key = key;
   this.elementType = null;
   this.type = null;
+  // 对于rootFiber节点而言，stateNode属性指向对应的fiberRoot节点
+  // 对于child fiber节点而言，stateNode属性指向对应的组件实例
   this.stateNode = null;
 
   // Fiber
+  // 以下属性创建单链表树结构
+  // return属性始终指向父节点
+  // child属性始终指向第一个子节点
+  // sibling属性始终指向第一个兄弟节点
   this.return = null;
   this.child = null;
   this.sibling = null;
+  // index属性表示当前fiber节点的索引
   this.index = 0;
 
   this.ref = null;
-
+  // 表示待处理的props数据
   this.pendingProps = pendingProps;
+  // 表示之前已经存储的props数据
   this.memoizedProps = null;
+  // 表示更新队列
+  // 例如在常见的setState操作中
+  // 其实会先将需要更新的数据存放到这里的updateQueue队列中用于后续调度
   this.updateQueue = null;
+  // 表示之前已经存储的state数据
   this.memoizedState = null;
   this.dependencies = null;
-
+  // 表示fiber节点的模式
   this.mode = mode;
 
   // Effects
@@ -294,9 +307,15 @@ function FiberNode(
   this.firstEffect = null;
   this.lastEffect = null;
 
+  // 表示当前更新任务的过期时间，即在该时间之后更新任务将会被完成
   this.expirationTime = NoWork;
+  // 表示当前fiber节点的子fiber节点中具有最高优先级的任务的过期时间
+  // 该属性的值会根据子fiber节点中的任务优先级进行动态调整
   this.childExpirationTime = NoWork;
 
+  // 用于指向另一个fiber节点
+  // 这两个fiber节点使用alternate属性相互引用，形成双缓冲
+  // alternate属性指向的fiber节点在任务调度中又称为workInProgress节点
   this.alternate = null;
 
   if (enableProfilerTimer) {
@@ -364,6 +383,7 @@ const createFiber = function(
   mode: TypeOfMode,
 ): Fiber {
   // $FlowFixMe: the shapes are exact here but Flow doesn't like constructors
+  // FiberNode构造函数用于创建一个FiberNode实例，即一个fiber节点
   return new FiberNode(tag, pendingProps, key, mode);
 };
 
@@ -595,7 +615,7 @@ export function createHostRootFiber(tag: RootTag): Fiber {
     // Without some nodes in the tree having empty base times.
     mode |= ProfileMode;
   }
-
+  // HostRoot 表示 fiber tree 的根节点
   return createFiber(HostRoot, null, null, mode);
 }
 

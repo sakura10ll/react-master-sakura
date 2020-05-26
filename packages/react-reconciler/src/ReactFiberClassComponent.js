@@ -178,28 +178,40 @@ export function applyDerivedStateFromProps(
   }
 }
 
+// classComponent初始化的时候拿到的update对象
 const classComponentUpdater = {
   isMounted,
   enqueueSetState(inst, payload, callback) {
+    // inst即调用this.setState时传进来的this
+    // 也就是classComponent实例
+    // 通过this获取fiber对象
+    // this._reactInternalFiber
+    // this 本身有存储 fiber对象 的属性，叫 _reactInternalFiber， 获取this._reactInternalFiber
     const fiber = getInstance(inst);
+    // 计算当前的时间
     const currentTime = requestCurrentTimeForUpdate();
+    // 异步加载的设置
     const suspenseConfig = requestCurrentSuspenseConfig();
+    // 计算fiber对象的过期时间
     const expirationTime = computeExpirationForFiber(
       currentTime,
       fiber,
       suspenseConfig,
     );
-
+    // 创建update对象
     const update = createUpdate(expirationTime, suspenseConfig);
+    // setState传进来的要更新的对象
     update.payload = payload;
+    // callback就是setState({},()=>{})的回调函数
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'setState');
       }
       update.callback = callback;
     }
-
+    // update入队
     enqueueUpdate(fiber, update);
+    // 任务调度
     scheduleWork(fiber, expirationTime);
   },
   enqueueReplaceState(inst, payload, callback) {

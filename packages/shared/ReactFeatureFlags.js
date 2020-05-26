@@ -23,7 +23,7 @@ export const warnAboutDeprecatedLifecycles = true;
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
 
-// Trace which interactions trigger each commit.
+// Trace which interactions trigger each commit.  // 跟踪触发每个提交的交互
 export const enableSchedulerTracing = __PROFILE__;
 
 // SSR experiments

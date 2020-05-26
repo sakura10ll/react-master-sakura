@@ -122,7 +122,7 @@ function legacyCreateRootFromDOMContainer(
   // First clear any existing content.
   if (!shouldHydrate) {
     let warned = false;
-    let rootSibling; // 根的兄弟节点，判断其是否有兄弟节点，若有开发环境下则报警告
+    let rootSibling; // 循环遍历每个子节点进行删除
     while ((rootSibling = container.lastChild)) {
       if (__DEV__) {
         if (
@@ -176,10 +176,10 @@ function warnOnInvalidCallback(callback: mixed, callerName: string): void {
   }
 }
 
-// 将渲染的子树放入DOM容器节点中（初始化DOM容器节点）
+// 将渲染的子树放入DOM容器节点中（初始化DOM容器节点） 构建Fiberroot和RootFiber，开始执行更新任务
 function legacyRenderSubtreeIntoContainer(
   parentComponent: ?React$Component<any, any>,
-  children: ReactNodeList,
+  children: ReactNodeList,  // reactElement对象
   container: Container, // 挂载的容器节点
   forceHydrate: boolean,
   callback: ?Function,

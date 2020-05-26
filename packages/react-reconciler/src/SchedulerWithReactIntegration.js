@@ -53,6 +53,7 @@ const fakeCallbackNode = {};
 // Except for NoPriority, these correspond to Scheduler priorities. We use
 // ascending numbers so we can compare them like numbers. They start at 90 to
 // avoid clashing with Scheduler's priorities.
+// 任务优先级
 export const ImmediatePriority: ReactPriorityLevel = 99;
 export const UserBlockingPriority: ReactPriorityLevel = 98;
 export const NormalPriority: ReactPriorityLevel = 97;
@@ -123,6 +124,7 @@ export function runWithPriority<T>(
   return Scheduler_runWithPriority(priorityLevel, fn);
 }
 
+// 异步任务调度
 export function scheduleCallback(
   reactPriorityLevel: ReactPriorityLevel,
   callback: SchedulerCallback,
@@ -132,12 +134,14 @@ export function scheduleCallback(
   return Scheduler_scheduleCallback(priorityLevel, callback, options);
 }
 
+// 同步任务调度的中间方法,如果队列不为空就加入队列，如果为空就立即推入任务调度队列
 export function scheduleSyncCallback(callback: SchedulerCallback) {
   // Push this callback into an internal queue. We'll flush these either in
   // the next tick, or earlier if something calls `flushSyncCallbackQueue`.
+  // 将此回调推入内部队列。我们将在下一个tick中刷新它们，如果有东西调用“flushSyncCallbackQueue”，则在更早的时间刷新它们。
   if (syncQueue === null) {
     syncQueue = [callback];
-    // Flush the queue in the next tick, at the earliest.
+    // Flush the queue in the next tick, at the earliest.  最早在下一个tick中刷新队列。
     immediateQueueCallbackNode = Scheduler_scheduleCallback(
       Scheduler_ImmediatePriority,
       flushSyncCallbackQueueImpl,
@@ -145,6 +149,7 @@ export function scheduleSyncCallback(callback: SchedulerCallback) {
   } else {
     // Push onto existing queue. Don't need to schedule a callback because
     // we already scheduled one when we created the queue.
+    // 推到现有队列上。不需要安排回调，因为我们在创建队列时已经安排了回调。
     syncQueue.push(callback);
   }
   return fakeCallbackNode;
